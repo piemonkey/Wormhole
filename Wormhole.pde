@@ -50,7 +50,6 @@ void setup() {
   frameRate(60);
 
 
-  tip = loadImage("scrapyard2.jpg");
   crateImage = loadImage("crate.jpeg");
   ballImage = loadImage("tux_droid.png");
   imageMode(CENTER);
@@ -130,7 +129,7 @@ void draw() {
 }
 
 void mouseClicked() {
-  append(crates, physics.createRect(mouseX - crateSize/2,
+  crates = (Body[]) append(crates, physics.createRect(mouseX - crateSize/2,
                                     mouseY - crateSize/2,
                                     mouseX + crateSize/2,
                                     mouseY + crateSize/2));
@@ -200,20 +199,30 @@ void myCustomRenderer(World world) {
 
   //TODO move to outside to avoid repeat calcs
   Vec2 wormholeCentre = new Vec2(width/2, height/2);
-  for (Body crate : crates)
+  // Crate to remove, can only be one as collisions prevent more than one getting close
+  int remove = -1;
+  for (int i = 0; i < crates.length; i++)
   {
-    Vec2 worldCenter = crate.getWorldCenter();
+    Vec2 worldCenter = crates[i].getWorldCenter();
     Vec2 cratePos = physics.worldToScreen(worldCenter);
-    float crateAngle = physics.getAngle(crate);
-    pushMatrix();
-    translate(cratePos.x, cratePos.y);
-    rotate(-crateAngle);
-    image(crateImage, 0, 0, crateSize, crateSize);
-    popMatrix();
     Vec2 directionToWormhole = wormholeCentre.sub(cratePos);
-    directionToWormhole.normalize();
-
-    crate.applyImpulse(directionToWormhole, worldCenter);
+    if (directionToWormhole.lengthSquared() < 500) {
+      remove = i;
+    } else {
+      directionToWormhole.normalize();
+      float crateAngle = physics.getAngle(crates[i]);
+      pushMatrix();
+      translate(cratePos.x, cratePos.y);
+      rotate(-crateAngle);
+      image(crateImage, 0, 0, crateSize, crateSize);
+      popMatrix();
+  
+      crates[i].applyImpulse(directionToWormhole, worldCenter);
+    }
+  }
+  if (remove >= 0) {
+    physics.removeBody(crates[remove]);
+    crates = removeBody(crates, remove);
   }
 
   if (dragging)
@@ -264,4 +273,17 @@ void collision(Body b1, Body b2, float impulse)
   }
   //
 }
+
+Body[] removeBody(Body[] array, int index) {
+  Body[] ret = new Body[array.length - 1];
+  int count = 0;
+  for (int i = 0; i < array.length; i++) {
+    if (i != index) {
+      ret[count] = array[i];
+      count++;
+    }
+  }
+  return ret;
+}
+      
 
