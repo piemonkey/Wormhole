@@ -69,7 +69,7 @@ void setup() {
    * borderBoxHeight The containing box's height - should be smaller than the world height, so that no object can escape
    * pixelsPerMeter Pixels per physical meter
    */
-  physics = new Physics(this, width, height, 0, -10, width*2, height*2, width, height, 100);
+  physics = new Physics(this, width, height, 0, 0, width*2, height*2, width, height, 100);
   // this overrides the debug render of the physics engine
   // with the method myCustomRenderer
   // comment out to use the debug renderer 
@@ -110,20 +110,16 @@ void setup() {
   wallSound.setLooping(false);
   wallSound.volume(0.25);
   // now an array of crate sounds
-  crateSounds = new AudioPlayer[crates.length];
-  for (int i=0;i<crateSounds.length;i++) {
-    crateSounds[i] = maxim.loadFile("crate2.wav");
-    crateSounds[i].setLooping(false);
-    crateSounds[i].volume(0.25);
-  }
+//  crateSounds = new AudioPlayer[crates.length];
+//  for (int i=0;i<crateSounds.length;i++) {
+//    crateSounds[i] = maxim.loadFile("crate2.wav");
+//    crateSounds[i].setLooping(false);
+//    crateSounds[i].volume(0.25);
+//  }
 }
 
 void draw() {
-
-
-
-  image(tip, width/2, height/2, width, height);
-
+  background(130);
 
   // we can call the renderer here if we want 
   // to run both our renderer and the debug renderer
@@ -131,6 +127,13 @@ void draw() {
 
   fill(0);
   text("Score: " + score, 20, 20);
+}
+
+void mouseClicked() {
+  append(crates, physics.createRect(mouseX - crateSize/2,
+                                    mouseY - crateSize/2,
+                                    mouseX + crateSize/2,
+                                    mouseY + crateSize/2));
 }
 
 /** on iOS, the first audio playback has to be triggered
@@ -143,9 +146,10 @@ void mousePressed() {
   if (!userHasTriggeredAudio) {
     droidSound.play();
     wallSound.play();
-    for (int i=0;i<crates.length;i++) {
-      crateSounds[i].play();
-    }
+    // TODO implement crate noises
+//    for (int i=0;i<crates.length;i++) {
+//      crateSounds[i].play();
+//    }
     userHasTriggeredAudio = true;
   }
 }
@@ -176,6 +180,7 @@ void mouseReleased()
 void myCustomRenderer(World world) {
   stroke(0);
 
+  // TODO remove. Draws catapult.
   Vec2 screenStartPoint = physics.worldToScreen(startPoint);
   strokeWeight(8);
   line(screenStartPoint.x, screenStartPoint.y, screenStartPoint.x, height);
@@ -193,16 +198,22 @@ void myCustomRenderer(World world) {
   popMatrix();
 
 
-  for (int i = 0; i < crates.length; i++)
+  //TODO move to outside to avoid repeat calcs
+  Vec2 wormholeCentre = new Vec2(width/2, height/2);
+  for (Body crate : crates)
   {
-    Vec2 worldCenter = crates[i].getWorldCenter();
+    Vec2 worldCenter = crate.getWorldCenter();
     Vec2 cratePos = physics.worldToScreen(worldCenter);
-    float crateAngle = physics.getAngle(crates[i]);
+    float crateAngle = physics.getAngle(crate);
     pushMatrix();
     translate(cratePos.x, cratePos.y);
     rotate(-crateAngle);
     image(crateImage, 0, 0, crateSize, crateSize);
     popMatrix();
+    Vec2 directionToWormhole = wormholeCentre.sub(cratePos);
+    directionToWormhole.normalize();
+
+    crate.applyImpulse(directionToWormhole, worldCenter);
   }
 
   if (dragging)
@@ -242,13 +253,13 @@ void collision(Body b1, Body b2, float impulse)
       droidSound.speed(impulse / 1000);
       droidSound.play();
     }
-    for (int i=0;i<crates.length;i++) {
-      if (b1 == crates[i] || b2 == crates[i]) {// its a crate
-        crateSounds[i].cue(0);
-        crateSounds[i].speed(0.25 + (impulse / 250));// 10000 as the crates move slower??
-        crateSounds[i].play();
-      }
-    }
+//    for (int i=0;i<crates.length;i++) {
+//      if (b1 == crates[i] || b2 == crates[i]) {// its a crate
+//        crateSounds[i].cue(0);
+//        crateSounds[i].speed(0.25 + (impulse / 250));// 10000 as the crates move slower??
+//        crateSounds[i].play();
+//      }
+//    }
   
   }
   //
