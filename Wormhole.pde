@@ -129,10 +129,13 @@ void draw() {
 }
 
 void mouseClicked() {
-  crates = (Body[]) append(crates, physics.createRect(mouseX - crateSize/2,
+  Body newCrate = physics.createRect(mouseX - crateSize/2,
                                     mouseY - crateSize/2,
                                     mouseX + crateSize/2,
-                                    mouseY + crateSize/2));
+                                    mouseY + crateSize/2);
+  crates = (Body[]) append(crates, newCrate);
+  Vec2 dir = new Vec2 (random(-100, 100), random(-100, 100));
+  newCrate.applyImpulse(dir, newCrate.getWorldCenter());
 }
 
 /** on iOS, the first audio playback has to be triggered
@@ -206,7 +209,7 @@ void myCustomRenderer(World world) {
     Vec2 worldCenter = crates[i].getWorldCenter();
     Vec2 cratePos = physics.worldToScreen(worldCenter);
     Vec2 directionToWormhole = wormholeCentre.sub(cratePos);
-    if (directionToWormhole.lengthSquared() < 500) {
+    if (directionToWormhole.lengthSquared() < 1000) {
       remove = i;
     } else {
       directionToWormhole.normalize();
