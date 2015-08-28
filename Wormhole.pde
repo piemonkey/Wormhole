@@ -121,6 +121,7 @@ void setup() {
 }
 
 void draw() {
+  music.speed(0.8);
   music.play();
   if (wait < 0) {
     float power = music.getAveragePower();
@@ -145,17 +146,30 @@ void draw() {
     background(200);
   }
   // Draw an equaliser circle
+  int min = 20;
+  int maxMargin = 50;
   float[] spectrum = music.getPowerSpectrum();
   strokeWeight(1);
   stroke(255, 0, 0);
   if (spectrum != null) {
-    float sampleAngle = TWO_PI / spectrum.length;
+    float sampleAngle = TWO_PI / (spectrum.length - min - maxMargin);
     float lastX = width/2;
-    float lastY = (height/2) * (1 + spectrum[0]/ 100);
-    score = spectrum[(int) random(0, spectrum.length)];
-    for (int i = 1; i < spectrum.length; i++) {
-      float x = width/2 + (height/200) * spectrum[i] * sin(sampleAngle * i);
-      float y = height/2 + (height/200) * spectrum[i] * cos(sampleAngle * i);
+    float lastY = (height/2) * (pow((- 30/spectrum[i]), 3));
+    score = pow((- 30/spectrum[400]), 3);//(100/spectrum[0]) * (100/spectrum[0])/8;
+//    score = width/2 - (height/4) * (100/spectrum[220]) * (100/spectrum[220]) * sin(sampleAngle * 220);
+        //line is - height/2 * spectrum[]/max
+    // xpos is width/2 - line * sin
+    //     = width/2 + (height * spec)/ 2max * sin
+    // for sin = 0  pos is width/2
+    // ypos is line * cos - height / 2
+//    //     = height/2 + (height * spec)/ 2max * cos
+//    // for cos = 1 pos is height/2 + height/2 * spec/max
+//    //                 = height/2 ( 1 + spec/max)
+    for (int i = min; i < spectrum.length - maxMargin; i++) {
+      float power = sqrt((100 + spectrum[i])/120);
+//      float power = 0 - (100/spectrum[i])/8;
+      float x = width/2 - (height/2) * (1 - power) * sin(sampleAngle * i);
+      float y = height/2 * (1 - (1 - power) * cos(sampleAngle * i));
       line(lastX, lastY, x, y);
       lastX = x;
       lastY = y;
