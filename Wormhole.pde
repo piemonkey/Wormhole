@@ -237,6 +237,7 @@ void myCustomRenderer(World world) {
     if (directionToWormhole.lengthSquared() < 1000) {
       remove = i;
     } else {
+      float scale = 100 / sqrt(directionToWormhole.lengthSquared());
       directionToWormhole.normalize();
       float crateAngle = physics.getAngle(crates[i]);
       pushMatrix();
@@ -245,7 +246,7 @@ void myCustomRenderer(World world) {
       image(crateImage, 0, 0, crateSize, crateSize);
       popMatrix();
   
-      crates[i].applyImpulse(directionToWormhole, worldCenter);
+      crates[i].applyImpulse(directionToWormhole.mul(scale), worldCenter);
     }
   }
   if (remove >= 0) {
