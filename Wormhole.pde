@@ -25,6 +25,14 @@ float beatThreshold = 0.3;
 int beatTimeout = 10;
 int wait = 0;
 
+// Background wormhole stuff
+float magnify = 20;
+float rotation = 0;
+float radius = 0;
+int elements = 100;
+float baseColour = 0.0;
+float spacing;
+
 Physics physics; // The physics handler: we'll see more of this later
 // rigid bodies for the droid and two crates
 Body droid;
@@ -54,6 +62,11 @@ void setup() {
   crateImage = loadImage("crate.jpeg");
   ballImage = loadImage("tux_droid.png");
   imageMode(CENTER);
+  
+  // Set up for wormhole
+  colorMode(HSB);
+  spacing = TWO_PI/elements;
+
 
   /*
    * Set up a physics world. This takes the following parameters:
@@ -125,24 +138,43 @@ void draw() {
   if (wait < 0) {
     float power = music.getAveragePower();
     if (power > beatThreshold) {
-      background(200);
-      //TODO place crates non-randomly
-        int x = random(crateSize, width - crateSize);
-        int y = random(crateSize, height - crateSize);
-        Body newCrate = physics.createRect(x - crateSize/2,
-                                          y - crateSize/2,
-                                          x + crateSize/2,
-                                          y + crateSize/2);
-        crates = (Body[]) append(crates, newCrate);
-        Vec2 dir = new Vec2 (random(-100, 100), random(-100, 100));
-        newCrate.applyImpulse(dir, newCrate.getWorldCenter());
+      background(130);
+      int x = random(crateSize, width - crateSize);
+      int y = random(crateSize, height - crateSize);
+      Body newCrate = physics.createRect(x - crateSize/2,
+                                        y - crateSize/2,
+                                        x + crateSize/2,
+                                        y + crateSize/2);
+      crates = (Body[]) append(crates, newCrate);
+      Vec2 dir = new Vec2 (random(-30, 30), random(-30, 30));
+      newCrate.applyImpulse(dir, newCrate.getWorldCenter());
       wait = beatTimeout;
     } else {
-      background(130);
+      background(0);
     }
   } else {
     wait--;
-    background(200);
+    background(130);
+  }
+  
+  // Draw wormhole
+  radius = 1.5;//map(mouseX, 0, width, 0, 3);//random(0, 2);//map(mouseX, 0, width, 0, 10);
+  rotation = 0;//map(mouseY, 0, height, -1, 1);//random(0, 2);map(mouseY, 0, height, 0, 10);
+  translate(width*0.5,height*0.5);// we translate the whole sketch to the centre of the screen, so 0,0 is in the middle.
+  float xPerElement = (mouseX - width*0.5)/elements;
+  float yPerElement = (mouseY - height*0.5)/elements;
+  baseColour = (baseColour + 1.8) % 256;
+  noFill();
+  strokeWeight(2);
+  for (int i = 0; i < elements;i++) {
+      stroke((baseColour + i*2) % 255,255,255);
+      pushMatrix();
+      // Each circle is drawn slightly more pushed towards the mouse
+      translate(xPerElement * i, yPerElement * i);
+      rotate(spacing*i*rotation);
+      translate(sin(spacing*i*radius)*magnify, 0);
+      ellipse(0,0,2*i,2*i);
+      popMatrix();
   }
 
   // we can call the renderer here if we want 
@@ -226,7 +258,7 @@ void myCustomRenderer(World world) {
 
 
   //TODO move to outside to avoid repeat calcs
-  Vec2 wormholeCentre = new Vec2(width/2, height/2);
+  Vec2 wormholeCentre = new Vec2(mouseX, mouseY);
   // Crate to remove, can only be one as collisions prevent more than one getting close
   int remove = -1;
   for (int i = 0; i < crates.length; i++)
@@ -237,7 +269,7 @@ void myCustomRenderer(World world) {
     if (directionToWormhole.lengthSquared() < 1000) {
       remove = i;
     } else {
-      float scale = 100 / sqrt(directionToWormhole.lengthSquared());
+      float scale = 10000 / directionToWormhole.lengthSquared();
       directionToWormhole.normalize();
       float crateAngle = physics.getAngle(crates[i]);
       pushMatrix();
