@@ -19,9 +19,11 @@ import org.jbox2d.dynamics.*;
 // audio stuff
 
 Maxim maxim;
-AudioPlayer droidSound, wallSound;
+AudioPlayer droidSound, wallSound, music;
 AudioPlayer[] crateSounds;
-
+float beatThreshold = 0.3;
+int beatTimeout = 10;
+int wait = 0;
 
 Physics physics; // The physics handler: we'll see more of this later
 // rigid bodies for the droid and two crates
@@ -35,7 +37,7 @@ CollisionDetector detector;
 int crateSize = 80;
 int ballSize = 60;
 
-PImage crateImage, ballImage, tip;
+PImage crateImage, ballImage;
 
 int score = 0;
 
@@ -49,12 +51,9 @@ void setup() {
   size(1024, 768);
   frameRate(60);
 
-
   crateImage = loadImage("crate.jpeg");
   ballImage = loadImage("tux_droid.png");
   imageMode(CENTER);
-
-  //initScene();
 
   /*
    * Set up a physics world. This takes the following parameters:
@@ -115,10 +114,36 @@ void setup() {
 //    crateSounds[i].setLooping(false);
 //    crateSounds[i].volume(0.25);
 //  }
+
+  music = maxim.loadFile("51239__rutgermuller__8-bit-electrohouse.wav");
+  music.setLooping(true);
+  music.setAnalysing(true);
 }
 
 void draw() {
-  background(130);
+  music.play();
+  if (wait < 0) {
+    float power = music.getAveragePower();
+    if (power > beatThreshold) {
+      background(200);
+      //TODO place crates non-randomly
+        int x = random(crateSize, width - crateSize);
+        int y = random(crateSize, height - crateSize);
+        Body newCrate = physics.createRect(x - crateSize/2,
+                                          y - crateSize/2,
+                                          x + crateSize/2,
+                                          y + crateSize/2);
+        crates = (Body[]) append(crates, newCrate);
+        Vec2 dir = new Vec2 (random(-100, 100), random(-100, 100));
+        newCrate.applyImpulse(dir, newCrate.getWorldCenter());
+      wait = beatTimeout;
+    } else {
+      background(130);
+    }
+  } else {
+    wait--;
+    background(200);
+  }
 
   // we can call the renderer here if we want 
   // to run both our renderer and the debug renderer
