@@ -144,6 +144,23 @@ void draw() {
     wait--;
     background(200);
   }
+  // Draw an equaliser circle
+  float[] spectrum = music.getPowerSpectrum();
+  strokeWeight(1);
+  stroke(255, 0, 0);
+  if (spectrum != null) {
+    float sampleAngle = TWO_PI / spectrum.length;
+    float lastX = width/2;
+    float lastY = (height/2) * (1 + spectrum[0]/ 100);
+    score = spectrum[(int) random(0, spectrum.length)];
+    for (int i = 1; i < spectrum.length; i++) {
+      float x = width/2 + (height/200) * spectrum[i] * sin(sampleAngle * i);
+      float y = height/2 + (height/200) * spectrum[i] * cos(sampleAngle * i);
+      line(lastX, lastY, x, y);
+      lastX = x;
+      lastY = y;
+    }
+  }
 
   // we can call the renderer here if we want 
   // to run both our renderer and the debug renderer
