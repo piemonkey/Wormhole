@@ -148,6 +148,8 @@ void draw() {
     }
   
     fill(0, 255, 255);
+    textSize(12);
+    textAlign(LEFT);
     text("Score: " + score, 20, 20);
   } else {
     music.stop();
@@ -158,7 +160,8 @@ void draw() {
     for (Body crate : crates) {
       physics.removeBody(crate);
     }
-    physics.removeBody(droid);
+    crates = new Body[0];
+    droid.setLinearVelocity(new Vec2(0, 0));
   }
 }
 
@@ -177,6 +180,14 @@ void mousePressed() {
       crateSounds[i].play();
     }
     userHasTriggeredAudio = true;
+  }
+}
+
+void mouseClicked() {
+  if (gameOver) {
+    score = 0;
+    music.cue();
+    gameOver = false;
   }
 }
 
