@@ -21,8 +21,8 @@ import org.jbox2d.dynamics.*;
 Maxim maxim;
 AudioPlayer droidSound, wallSound, music;
 AudioPlayer[] crateSounds;
-float beatThreshold = 0.3;
-int beatTimeout = 10;
+float beatThreshold = 0.31;
+int beatTimeout = 15;
 int wait = 0;
 
 // Background wormhole stuff
@@ -134,6 +134,7 @@ void setup() {
 }
 
 void draw() {
+  music.speed(0.8);
   music.play();
   if (wait < 0) {
     float power = music.getAveragePower();
@@ -160,7 +161,6 @@ void draw() {
   // Draw wormhole
   radius = 1.5;//map(mouseX, 0, width, 0, 3);//random(0, 2);//map(mouseX, 0, width, 0, 10);
   rotation = 0;//map(mouseY, 0, height, -1, 1);//random(0, 2);map(mouseY, 0, height, 0, 10);
-  translate(width*0.5,height*0.5);// we translate the whole sketch to the centre of the screen, so 0,0 is in the middle.
   float xPerElement = (mouseX - width*0.5)/elements;
   float yPerElement = (mouseY - height*0.5)/elements;
   baseColour = (baseColour + 1.8) % 256;
@@ -170,7 +170,7 @@ void draw() {
       stroke((baseColour + i*2) % 255,255,255);
       pushMatrix();
       // Each circle is drawn slightly more pushed towards the mouse
-      translate(xPerElement * i, yPerElement * i);
+      translate(width * 0.5 + xPerElement * i, height * 0.5 + yPerElement * i);
       rotate(spacing*i*rotation);
       translate(sin(spacing*i*radius)*magnify, 0);
       ellipse(0,0,2*i,2*i);
