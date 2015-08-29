@@ -201,8 +201,7 @@ void myCustomRenderer(World world) {
     if (directionToWormhole.lengthSquared() < 1000) {
       remove = i;
     } else {
-      float scale = 10000 / directionToWormhole.lengthSquared();
-      directionToWormhole.normalize();
+      float scale = 100 / directionToWormhole.lengthSquared();
       float crateAngle = physics.getAngle(crates[i]);
       pushMatrix();
       translate(cratePos.x, cratePos.y);
