@@ -19,6 +19,7 @@ AudioPlayer[] crateSounds;
 float beatThreshold = 0.31;
 int beatTimeout = 15;
 int wait = 0;
+int nextCrateSound = 0;
 
 // Background wormhole stuff
 float magnify = 20;
@@ -90,13 +91,13 @@ void setup() {
   droidSound.volume(0.25);
   wallSound.setLooping(false);
   wallSound.volume(0.25);
-  // now an array of crate sounds
-//  crateSounds = new AudioPlayer[crates.length];
-//  for (int i=0;i<crateSounds.length;i++) {
-//    crateSounds[i] = maxim.loadFile("crate2.wav");
-//    crateSounds[i].setLooping(false);
-//    crateSounds[i].volume(0.25);
-//  }
+  // Array of crate sounds to be used as a pool
+  crateSounds = new AudioPlayer[10];
+  for (int i = 0; i < crateSounds.length; i++) {
+    crateSounds[i] = maxim.loadFile("crate2.wav");
+    crateSounds[i].setLooping(false);
+    crateSounds[i].volume(0.15);
+  }
 
   music = maxim.loadFile("51239__rutgermuller__8-bit-electrohouse.wav");
   music.setLooping(true);
@@ -154,6 +155,10 @@ void draw() {
     textSize(100);
     textAlign(CENTER);
     text("GAME OVER\nScore: " + score, width/2, height/2);
+    for (Body crate : crates) {
+      physics.removeBody(crate);
+    }
+    physics.removeBody(droid);
   }
 }
 
@@ -168,10 +173,9 @@ void mousePressed() {
     music.play();
     droidSound.play();
     wallSound.play();
-    // TODO implement crate noises
-//    for (int i=0;i<crates.length;i++) {
-//      crateSounds[i].play();
-//    }
+    for (int i = 0; i < crateSounds.length; i++) {
+      crateSounds[i].play();
+    }
     userHasTriggeredAudio = true;
   }
 }
@@ -236,7 +240,7 @@ void myCustomRenderer(World world) {
 // there is a collision
 void collision(Body b1, Body b2, float impulse)
 {
-  if (impulse > 15.0){ //only play a sound if the force is strong enough ... otherwise we get too many sounds playing at once
+  if (impulse > 25.0){ //only play a sound if the force is strong enough ... otherwise we get too many sounds playing at once
   
     // test for droid
     if (b1.getMass() == 0 || b2.getMass() == 0) {// b1 or b2 are walls
@@ -253,13 +257,14 @@ void collision(Body b1, Body b2, float impulse)
       droidSound.speed(impulse / 1000);
       droidSound.play();
     }
-//    for (int i=0;i<crates.length;i++) {
-//      if (b1 == crates[i] || b2 == crates[i]) {// its a crate
-//        crateSounds[i].cue(0);
-//        crateSounds[i].speed(0.25 + (impulse / 250));// 10000 as the crates move slower??
-//        crateSounds[i].play();
-//      }
-//    }
+    for (int i=0; i < crates.length; i++) {
+      if (b1 == crates[i] || b2 == crates[i]) {// its a crate
+        crateSounds[nextCrateSound].cue(0);
+        crateSounds[nextCrateSound].speed(0.25 + (impulse / 250));// 10000 as the crates move slower??
+        crateSounds[nextCrateSound].play();
+        nextCrateSound = (nextCrateSound + 1) % crateSounds.length;
+      }
+    }
   
   }
   //
