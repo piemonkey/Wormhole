@@ -106,7 +106,8 @@ void setup() {
 void draw() {
   if (!gameOver) {
     background(0);
-    music.speed(0.8);
+    float speed = constrain(0.8 + score * 0.001, 0.8, 2.0);
+    music.speed(speed);
     music.play();
     if (wait < 0) {
       float power = music.getAveragePower();
@@ -131,7 +132,7 @@ void draw() {
     rotation = 0;//map(mouseY, 0, height, -1, 1);//random(0, 2);map(mouseY, 0, height, 0, 10);
     float xPerElement = (mouseX - width*0.5)/elements;
     float yPerElement = (mouseY - height*0.5)/elements;
-    baseColour = (baseColour + 1.8) % 256;
+    baseColour = (baseColour + 3 * speed) % 256;
     noFill();
     strokeWeight(2);
     for (int i = 0; i < elements;i++) {
