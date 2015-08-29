@@ -12,12 +12,7 @@ import org.jbox2d.dynamics.joints.*;
 import org.jbox2d.p5.*;
 import org.jbox2d.dynamics.*;
 
-/**
- * A basic physics based game
- */
-
 // audio stuff
-
 Maxim maxim;
 AudioPlayer droidSound, wallSound, music;
 AudioPlayer[] crateSounds;
@@ -33,13 +28,9 @@ int elements = 100;
 float baseColour = 0.0;
 float spacing;
 
-Physics physics; // The physics handler: we'll see more of this later
-// rigid bodies for the droid and two crates
+Physics physics;
 Body droid;
-Body [] crates;
-// the start point of the catapult 
-Vec2 startPoint;
-// a handler that will detect collisions
+Body [] crates = new Body[0];
 CollisionDetector detector; 
 
 int crateSize = 80;
@@ -48,8 +39,6 @@ int ballSize = 60;
 PImage crateImage, ballImage;
 
 int score = 0;
-
-boolean dragging = false;
 
 // this is used to remember that the user 
 // has triggered the audio on iOS... see mousePressed below
@@ -81,33 +70,13 @@ void setup() {
    * pixelsPerMeter Pixels per physical meter
    */
   physics = new Physics(this, width, height, 0, 0, width*2, height*2, width, height, 100);
-  // this overrides the debug render of the physics engine
-  // with the method myCustomRenderer
-  // comment out to use the debug renderer 
-  // (currently broken in JS)
   physics.setCustomRenderingMethod(this, "myCustomRenderer");
   physics.setDensity(10.0);
 
-  // set up the objects
-  // Rect parameters are the top left 
-  // and bottom right corners
-  crates = new Body[7];
-  crates[0] = physics.createRect(600, height-crateSize, 600+crateSize, height);
-  crates[1] = physics.createRect(600, height-2*crateSize, 600+crateSize, height-crateSize);
-  crates[2] = physics.createRect(600, height-3*crateSize, 600+crateSize, height-2*crateSize);
-  crates[3] = physics.createRect(600+1.5*crateSize, height-crateSize, 600+2.5*crateSize, height);
-  crates[4] = physics.createRect(600+1.5*crateSize, height-2*crateSize, 600+2.5*crateSize, height-crateSize);
-  crates[5] = physics.createRect(600+1.5*crateSize, height-3*crateSize, 600+2.5*crateSize, height-2*crateSize);
-  crates[6] = physics.createRect(600+0.75*crateSize, height-4*crateSize, 600+1.75*crateSize, height-3*crateSize);
-
-  startPoint = new Vec2(200, height-150);
-  // this converst from processing screen 
-  // coordinates to the coordinates used in the
-  // physics engine (10 pixels to a meter by default)
-  startPoint = physics.screenToWorld(startPoint);
-
-  // circle parameters are center x,y and radius
-  droid = physics.createCircle(width/2, -100, ballSize/2);
+  float defaultRestitution = physics.getRestitution();
+  physics.setRestitution(1.0);
+  droid = physics.createCircle(width/2, height/2, ballSize/2);
+  physics.setRestitution(defaultRestitution);
 
   // sets up the collision callbacks
   detector = new CollisionDetector (physics, this);
@@ -177,22 +146,8 @@ void draw() {
       popMatrix();
   }
 
-  // we can call the renderer here if we want 
-  // to run both our renderer and the debug renderer
-  myCustomRenderer(physics.getWorld());
-
   fill(0);
   text("Score: " + score, 20, 20);
-}
-
-void mouseClicked() {
-  Body newCrate = physics.createRect(mouseX - crateSize/2,
-                                    mouseY - crateSize/2,
-                                    mouseX + crateSize/2,
-                                    mouseY + crateSize/2);
-  crates = (Body[]) append(crates, newCrate);
-  Vec2 dir = new Vec2 (random(-100, 100), random(-100, 100));
-  newCrate.applyImpulse(dir, newCrate.getWorldCenter());
 }
 
 /** on iOS, the first audio playback has to be triggered
@@ -203,6 +158,7 @@ void mouseClicked() {
 */
 void mousePressed() {
   if (!userHasTriggeredAudio) {
+    music.play();
     droidSound.play();
     wallSound.play();
     // TODO implement crate noises
@@ -213,37 +169,11 @@ void mousePressed() {
   }
 }
 
-void mouseDragged()
-{
-  // tie the droid to the mouse while we are dragging
-  dragging = true;
-  droid.setPosition(physics.screenToWorld(new Vec2(mouseX, mouseY)));
-}
-
-// when we release the mouse, apply an impulse based 
-// on the distance from the droid to the catapult
-void mouseReleased()
-{
-  dragging = false;
-  Vec2 impulse = new Vec2();
-  impulse.set(startPoint);
-  impulse = impulse.sub(droid.getWorldCenter());
-  impulse = impulse.mul(50);
-  droid.applyImpulse(impulse, droid.getWorldCenter());
-}
-
 // this function renders the physics scene.
 // this can either be called automatically from the physics
 // engine if we enable it as a custom renderer or 
 // we can call it from draw
 void myCustomRenderer(World world) {
-  stroke(0);
-
-  // TODO remove. Draws catapult.
-  Vec2 screenStartPoint = physics.worldToScreen(startPoint);
-  strokeWeight(8);
-  line(screenStartPoint.x, screenStartPoint.y, screenStartPoint.x, height);
-
   // get the droids position and rotation from
   // the physics engine and then apply a translate 
   // and rotate to the image using those values
@@ -257,7 +187,6 @@ void myCustomRenderer(World world) {
   popMatrix();
 
 
-  //TODO move to outside to avoid repeat calcs
   Vec2 wormholeCentre = new Vec2(mouseX, mouseY);
   // Crate to remove, can only be one as collisions prevent more than one getting close
   int remove = -1;
@@ -284,12 +213,6 @@ void myCustomRenderer(World world) {
   if (remove >= 0) {
     physics.removeBody(crates[remove]);
     crates = removeBody(crates, remove);
-  }
-
-  if (dragging)
-  {
-    strokeWeight(2);
-    line(screenDroidPos.x, screenDroidPos.y, screenStartPoint.x, screenStartPoint.y);
   }
 }
 
