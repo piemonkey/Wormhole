@@ -105,12 +105,12 @@ void setup() {
 
 void draw() {
   if (!gameOver) {
+    background(0);
     music.speed(0.8);
     music.play();
     if (wait < 0) {
       float power = music.getAveragePower();
       if (power > beatThreshold) {
-        background(130);
         int x = random(crateSize, width - crateSize);
         int y = random(crateSize, height - crateSize);
         Body newCrate = physics.createRect(x - crateSize/2,
@@ -121,12 +121,9 @@ void draw() {
         Vec2 dir = new Vec2 (random(-30, 30), random(-30, 30));
         newCrate.applyImpulse(dir, newCrate.getWorldCenter());
         wait = beatTimeout;
-      } else {
-        background(0);
       }
     } else {
       wait--;
-      background(130);
     }
     
     // Draw wormhole
@@ -148,7 +145,7 @@ void draw() {
         popMatrix();
     }
   
-    fill(0);
+    fill(0, 255, 255);
     text("Score: " + score, 20, 20);
   } else {
     music.stop();
@@ -227,6 +224,7 @@ void myCustomRenderer(World world) {
       }
     }
     if (remove >= 0) {
+      score++;
       physics.removeBody(crates[remove]);
       crates = removeBody(crates, remove);
     }
@@ -237,15 +235,6 @@ void myCustomRenderer(World world) {
 // there is a collision
 void collision(Body b1, Body b2, float impulse)
 {
-  if ((b1 == droid && b2.getMass() > 0)
-    || (b2 == droid && b1.getMass() > 0))
-  {
-    if (impulse > 1.0)
-    {
-      score += 1;
-    }
-  }
-  
   if (impulse > 15.0){ //only play a sound if the force is strong enough ... otherwise we get too many sounds playing at once
   
     // test for droid
