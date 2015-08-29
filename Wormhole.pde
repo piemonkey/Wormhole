@@ -39,6 +39,7 @@ int ballSize = 60;
 PImage crateImage, ballImage;
 
 int score = 0;
+boolean gameOver = false;
 
 // this is used to remember that the user 
 // has triggered the audio on iOS... see mousePressed below
@@ -103,51 +104,59 @@ void setup() {
 }
 
 void draw() {
-  music.speed(0.8);
-  music.play();
-  if (wait < 0) {
-    float power = music.getAveragePower();
-    if (power > beatThreshold) {
-      background(130);
-      int x = random(crateSize, width - crateSize);
-      int y = random(crateSize, height - crateSize);
-      Body newCrate = physics.createRect(x - crateSize/2,
-                                        y - crateSize/2,
-                                        x + crateSize/2,
-                                        y + crateSize/2);
-      crates = (Body[]) append(crates, newCrate);
-      Vec2 dir = new Vec2 (random(-30, 30), random(-30, 30));
-      newCrate.applyImpulse(dir, newCrate.getWorldCenter());
-      wait = beatTimeout;
+  if (!gameOver) {
+    music.speed(0.8);
+    music.play();
+    if (wait < 0) {
+      float power = music.getAveragePower();
+      if (power > beatThreshold) {
+        background(130);
+        int x = random(crateSize, width - crateSize);
+        int y = random(crateSize, height - crateSize);
+        Body newCrate = physics.createRect(x - crateSize/2,
+                                          y - crateSize/2,
+                                          x + crateSize/2,
+                                          y + crateSize/2);
+        crates = (Body[]) append(crates, newCrate);
+        Vec2 dir = new Vec2 (random(-30, 30), random(-30, 30));
+        newCrate.applyImpulse(dir, newCrate.getWorldCenter());
+        wait = beatTimeout;
+      } else {
+        background(0);
+      }
     } else {
-      background(0);
+      wait--;
+      background(130);
     }
-  } else {
-    wait--;
-    background(130);
-  }
+    
+    // Draw wormhole
+    radius = 1.5;//map(mouseX, 0, width, 0, 3);//random(0, 2);//map(mouseX, 0, width, 0, 10);
+    rotation = 0;//map(mouseY, 0, height, -1, 1);//random(0, 2);map(mouseY, 0, height, 0, 10);
+    float xPerElement = (mouseX - width*0.5)/elements;
+    float yPerElement = (mouseY - height*0.5)/elements;
+    baseColour = (baseColour + 1.8) % 256;
+    noFill();
+    strokeWeight(2);
+    for (int i = 0; i < elements;i++) {
+        stroke((baseColour + i*2) % 255,255,255);
+        pushMatrix();
+        // Each circle is drawn slightly more pushed towards the mouse
+        translate(width * 0.5 + xPerElement * i, height * 0.5 + yPerElement * i);
+        rotate(spacing*i*rotation);
+        translate(sin(spacing*i*radius)*magnify, 0);
+        ellipse(0,0,2*i,2*i);
+        popMatrix();
+    }
   
-  // Draw wormhole
-  radius = 1.5;//map(mouseX, 0, width, 0, 3);//random(0, 2);//map(mouseX, 0, width, 0, 10);
-  rotation = 0;//map(mouseY, 0, height, -1, 1);//random(0, 2);map(mouseY, 0, height, 0, 10);
-  float xPerElement = (mouseX - width*0.5)/elements;
-  float yPerElement = (mouseY - height*0.5)/elements;
-  baseColour = (baseColour + 1.8) % 256;
-  noFill();
-  strokeWeight(2);
-  for (int i = 0; i < elements;i++) {
-      stroke((baseColour + i*2) % 255,255,255);
-      pushMatrix();
-      // Each circle is drawn slightly more pushed towards the mouse
-      translate(width * 0.5 + xPerElement * i, height * 0.5 + yPerElement * i);
-      rotate(spacing*i*rotation);
-      translate(sin(spacing*i*radius)*magnify, 0);
-      ellipse(0,0,2*i,2*i);
-      popMatrix();
+    fill(0);
+    text("Score: " + score, 20, 20);
+  } else {
+    music.stop();
+    fill(0, 255, 255);
+    textSize(100);
+    textAlign(CENTER);
+    text("GAME OVER\nScore: " + score, width/2, height/2);
   }
-
-  fill(0);
-  text("Score: " + score, 20, 20);
 }
 
 /** on iOS, the first audio playback has to be triggered
@@ -174,47 +183,53 @@ void mousePressed() {
 // engine if we enable it as a custom renderer or 
 // we can call it from draw
 void myCustomRenderer(World world) {
-  // get the droids position and rotation from
-  // the physics engine and then apply a translate 
-  // and rotate to the image using those values
-  // (then do the same for the crates)
-  Vec2 worldDroidPos = droid.getWorldCenter();
-  Vec2 screenDroidPos = physics.worldToScreen(worldDroidPos);
-  float droidAngle = physics.getAngle(droid);
-  pushMatrix();
-  translate(screenDroidPos.x, screenDroidPos.y);
-  rotate(-radians(droidAngle));
-  image(ballImage, 0, 0, ballSize, ballSize);
-  popMatrix();
-
-  Vec2 wormholeCentre = new Vec2(mouseX, mouseY);
-  Vec2 droidToWorm = wormholeCentre.sub(screenDroidPos);
-  droidToWorm.normalize();
-  droid.applyImpulse(droidToWorm.mul(0.1), worldDroidPos);
-  // Crate to remove, can only be one as collisions prevent more than one getting close
-  int remove = -1;
-  for (int i = 0; i < crates.length; i++)
-  {
-    Vec2 worldCenter = crates[i].getWorldCenter();
-    Vec2 cratePos = physics.worldToScreen(worldCenter);
-    Vec2 directionToWormhole = wormholeCentre.sub(cratePos);
-    if (directionToWormhole.lengthSquared() < 1000) {
-      remove = i;
-    } else {
-      float scale = 100 / directionToWormhole.lengthSquared();
-      float crateAngle = physics.getAngle(crates[i]);
-      pushMatrix();
-      translate(cratePos.x, cratePos.y);
-      rotate(-crateAngle);
-      image(crateImage, 0, 0, crateSize, crateSize);
-      popMatrix();
+  if (!gameOver) {
+    // get the droids position and rotation from
+    // the physics engine and then apply a translate 
+    // and rotate to the image using those values
+    // (then do the same for the crates)
+    Vec2 worldDroidPos = droid.getWorldCenter();
+    Vec2 screenDroidPos = physics.worldToScreen(worldDroidPos);
+    float droidAngle = physics.getAngle(droid);
+    pushMatrix();
+    translate(screenDroidPos.x, screenDroidPos.y);
+    rotate(-radians(droidAngle));
+    image(ballImage, 0, 0, ballSize, ballSize);
+    popMatrix();
   
-      crates[i].applyImpulse(directionToWormhole.mul(scale), worldCenter);
+    Vec2 wormholeCentre = new Vec2(mouseX, mouseY);
+    Vec2 droidToWorm = wormholeCentre.sub(screenDroidPos);
+    if (droidToWorm.lengthSquared() < 1000) {
+      gameOver = true;
+    } else {
+      droidToWorm.normalize();
+      droid.applyImpulse(droidToWorm.mul(0.1), worldDroidPos);
     }
-  }
-  if (remove >= 0) {
-    physics.removeBody(crates[remove]);
-    crates = removeBody(crates, remove);
+    // Crate to remove, can only be one as collisions prevent more than one getting close
+    int remove = -1;
+    for (int i = 0; i < crates.length; i++)
+    {
+      Vec2 worldCenter = crates[i].getWorldCenter();
+      Vec2 cratePos = physics.worldToScreen(worldCenter);
+      Vec2 directionToWormhole = wormholeCentre.sub(cratePos);
+      if (directionToWormhole.lengthSquared() < 1000) {
+        remove = i;
+      } else {
+        float scale = 100 / directionToWormhole.lengthSquared();
+        float crateAngle = physics.getAngle(crates[i]);
+        pushMatrix();
+        translate(cratePos.x, cratePos.y);
+        rotate(-crateAngle);
+        image(crateImage, 0, 0, crateSize, crateSize);
+        popMatrix();
+    
+        crates[i].applyImpulse(directionToWormhole.mul(scale), worldCenter);
+      }
+    }
+    if (remove >= 0) {
+      physics.removeBody(crates[remove]);
+      crates = removeBody(crates, remove);
+    }
   }
 }
 
