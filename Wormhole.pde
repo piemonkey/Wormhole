@@ -178,7 +178,8 @@ void myCustomRenderer(World world) {
   // the physics engine and then apply a translate 
   // and rotate to the image using those values
   // (then do the same for the crates)
-  Vec2 screenDroidPos = physics.worldToScreen(droid.getWorldCenter());
+  Vec2 worldDroidPos = droid.getWorldCenter();
+  Vec2 screenDroidPos = physics.worldToScreen(worldDroidPos);
   float droidAngle = physics.getAngle(droid);
   pushMatrix();
   translate(screenDroidPos.x, screenDroidPos.y);
@@ -186,8 +187,10 @@ void myCustomRenderer(World world) {
   image(ballImage, 0, 0, ballSize, ballSize);
   popMatrix();
 
-
   Vec2 wormholeCentre = new Vec2(mouseX, mouseY);
+  Vec2 droidToWorm = wormholeCentre.sub(screenDroidPos);
+  droidToWorm.normalize();
+  droid.applyImpulse(droidToWorm.mul(0.1), worldDroidPos);
   // Crate to remove, can only be one as collisions prevent more than one getting close
   int remove = -1;
   for (int i = 0; i < crates.length; i++)
