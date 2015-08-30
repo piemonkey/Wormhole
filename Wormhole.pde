@@ -252,21 +252,21 @@ void myCustomRenderer(World world) {
 // there is a collision
 void collision(Body b1, Body b2, float impulse)
 {
-  if (impulse > 25.0){ //only play a sound if the force is strong enough ... otherwise we get too many sounds playing at once
+  if (impulse > 15.0){ //only play a sound if the force is strong enough ... otherwise we get too many sounds playing at once
   
     // test for droid
     if (b1.getMass() == 0 || b2.getMass() == 0) {// b1 or b2 are walls
       // wall sound
       //println("wall "+(impulse / 1000));
       wallSound.cue(0);
-      wallSound.speed(impulse / 1000);// 
+      wallSound.speed(0.05 + impulse / 500);// 
       wallSound.play();
     }
     if (b1 == droid || b2 == droid) { // b1 or b2 are the droid
       // droid sound
       //println("droid");
       droidSound.cue(0);
-      droidSound.speed(impulse / 1000);
+      droidSound.speed(0.05 + impulse / 500);
       droidSound.play();
     }
     for (int i=0; i < crates.length; i++) {
