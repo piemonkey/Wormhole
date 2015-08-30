@@ -35,9 +35,10 @@ Body [] crates = new Body[0];
 CollisionDetector detector; 
 
 int crateSize = 80;
+int crateBrightness = 100;
 int ballSize = 60;
 
-PImage crateImage, ballImage, stars;
+PImage ballImage, stars;
 
 int score = 0;
 boolean gameOver = false;
@@ -50,10 +51,10 @@ void setup() {
   size(1024, 768);
   frameRate(60);
 
-  crateImage = loadImage("crate.jpeg");
   ballImage = loadImage("tux_droid.png");
   stars = loadImage("stars.jpg");
   imageMode(CENTER);
+  rectMode(CENTER);
   
   // Set up for wormhole
   colorMode(HSB);
@@ -111,8 +112,11 @@ void draw() {
     float speed = constrain(0.8 + score * 0.001, 0.8, 2.0);
     music.speed(speed);
     music.play();
+    float power = music.getAveragePower();
+    if (power) {
+      crateBrightness = (power + 0.2) * 440;
+    };
     if (wait < 0) {
-      float power = music.getAveragePower();
       if (power > beatThreshold) {
         int x = random(crateSize, width - crateSize);
         int y = random(crateSize, height - crateSize);
@@ -234,7 +238,9 @@ void myCustomRenderer(World world) {
         pushMatrix();
         translate(cratePos.x, cratePos.y);
         rotate(-crateAngle);
-        image(crateImage, 0, 0, crateSize, crateSize);
+        fill(255, 255, crateBrightness);
+        noStroke();
+        rect(0, 0, crateSize, crateSize);
         popMatrix();
     
         crates[i].applyImpulse(directionToWormhole.mul(scale), worldCenter);
