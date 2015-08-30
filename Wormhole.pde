@@ -37,7 +37,7 @@ CollisionDetector detector;
 int crateSize = 80;
 int ballSize = 60;
 
-PImage crateImage, ballImage;
+PImage crateImage, ballImage, stars;
 
 int score = 0;
 boolean gameOver = false;
@@ -52,6 +52,7 @@ void setup() {
 
   crateImage = loadImage("crate.jpeg");
   ballImage = loadImage("tux_droid.png");
+  stars = loadImage("stars.jpg");
   imageMode(CENTER);
   
   // Set up for wormhole
@@ -106,7 +107,7 @@ void setup() {
 
 void draw() {
   if (!gameOver) {
-    background(0);
+    image(stars, width/2, height/2, width, height);
     float speed = constrain(0.8 + score * 0.001, 0.8, 2.0);
     music.speed(speed);
     music.play();
