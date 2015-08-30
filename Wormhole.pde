@@ -120,7 +120,7 @@ void draw() {
                                           x + crateSize/2,
                                           y + crateSize/2);
         crates = (Body[]) append(crates, newCrate);
-        Vec2 dir = new Vec2 (random(-30, 30), random(-30, 30));
+        Vec2 dir = new Vec2 (random(-30 * speed, 30 * speed), random(-30 * speed, 30 * speed));
         newCrate.applyImpulse(dir, newCrate.getWorldCenter());
         wait = beatTimeout;
       }
