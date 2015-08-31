@@ -40,7 +40,7 @@ int crateSize = 70;
 int crateBrightness = 100;
 int ballSize = 60;
 
-PImage ballImage, stars;
+PImage ballImage, stars, boom;
 
 int score = 0;
 boolean gameOver = false;
@@ -55,6 +55,7 @@ void setup() {
 
   ballImage = loadImage("tux_droid.png");
   stars = loadImage("stars.jpg");
+  boom = loadImage("explosion.png");
   imageMode(CENTER);
   rectMode(CENTER);
   
@@ -254,6 +255,7 @@ void myCustomRenderer(World world) {
     
         crates[i].applyImpulse(directionToWormhole.mul(scale), worldCenter);
       } else {
+        image(boom, cratePos.x, cratePos.y);
         gameOver = true;
       }
     }
