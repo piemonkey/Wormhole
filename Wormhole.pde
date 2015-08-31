@@ -32,9 +32,11 @@ float spacing;
 Physics physics;
 Body droid;
 Body [] crates = new Body[0];
+float crateLifetime = 360;
+float[] crateTimers = new float[0];
 CollisionDetector detector; 
 
-int crateSize = 80;
+int crateSize = 70;
 int crateBrightness = 100;
 int ballSize = 60;
 
@@ -112,9 +114,14 @@ void draw() {
     float speed = constrain(0.8 + score * 0.001, 0.8, 2.0);
     music.speed(speed);
     music.play();
+
+    for (int i = 0; i < crateTimers.length; i++) {
+      crateTimers[i] -= speed;
+    }
+
     float power = music.getAveragePower();
     if (power) {
-      crateBrightness = (power + 0.2) * 440;
+      crateBrightness = (power + 0.5) * 300;
     };
     if (wait < 0) {
       if (power > beatThreshold) {
@@ -125,6 +132,7 @@ void draw() {
                                           x + crateSize/2,
                                           y + crateSize/2);
         crates = (Body[]) append(crates, newCrate);
+        crateTimers = (float[]) append(crateTimers, crateLifetime);
         Vec2 dir = new Vec2 (random(-30 * speed, 30 * speed), random(-30 * speed, 30 * speed));
         newCrate.applyImpulse(dir, newCrate.getWorldCenter());
         wait = beatTimeout;
@@ -166,6 +174,7 @@ void draw() {
       physics.removeBody(crate);
     }
     crates = new Body[0];
+    crateTimers = new float[0];
     droid.setLinearVelocity(new Vec2(0, 0));
   }
 }
@@ -232,24 +241,27 @@ void myCustomRenderer(World world) {
       Vec2 directionToWormhole = wormholeCentre.sub(cratePos);
       if (directionToWormhole.lengthSquared() < 1000) {
         remove = i;
-      } else {
+      } else if (crateTimers[i] > 0) {
         float scale = 100 / directionToWormhole.lengthSquared();
         float crateAngle = physics.getAngle(crates[i]);
         pushMatrix();
         translate(cratePos.x, cratePos.y);
         rotate(-crateAngle);
-        fill(255, 255, crateBrightness);
+        fill((int) max(crateTimers[i]/5 - 10, 0), 255, crateBrightness);
         noStroke();
         rect(0, 0, crateSize, crateSize);
         popMatrix();
     
         crates[i].applyImpulse(directionToWormhole.mul(scale), worldCenter);
+      } else {
+        gameOver = true;
       }
     }
     if (remove >= 0) {
       score++;
       physics.removeBody(crates[remove]);
       crates = removeBody(crates, remove);
+      crateTimers = removeFloat(crateTimers, remove);
     }
   }
 }
@@ -300,4 +312,15 @@ Body[] removeBody(Body[] array, int index) {
   return ret;
 }
       
+float[] removeFloat(float[] array, int index) {
+  float[] ret = new float[array.length - 1];
+  int count = 0;
+  for (int i = 0; i < array.length; i++) {
+    if (i != index) {
+      ret[count] = array[i];
+      count++;
+    }
+  }
+  return ret;
+}
 
