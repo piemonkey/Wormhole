@@ -1,6 +1,7 @@
 //The MIT License (MIT) - See Licence.txt for details
 
 //Copyright (c) 2013 Mick Grierson, Matthew Yee-King, Marco Gillies
+//Copyright (c) 2015 Richard Miller
 
 
 import org.jbox2d.util.nonconvex.*;
