@@ -80,10 +80,9 @@ void setup() {
   physics.setCustomRenderingMethod(this, "myCustomRenderer");
   physics.setDensity(10.0);
 
-  float defaultRestitution = physics.getRestitution();
   physics.setRestitution(1.0);
   droid = physics.createCircle(width/2, height/2, ballSize/2);
-  physics.setRestitution(defaultRestitution);
+  physics.setRestitution(0.95);
 
   // sets up the collision callbacks
   detector = new CollisionDetector (physics, this);
@@ -134,8 +133,10 @@ void draw() {
                                           y + crateSize/2);
         crates = (Body[]) append(crates, newCrate);
         crateTimers = (float[]) append(crateTimers, crateLifetime);
-        Vec2 dir = new Vec2 (random(-30 * speed, 30 * speed), random(-30 * speed, 30 * speed));
+        float maxSpeed = 10 + 30 * speed;
+        Vec2 dir = new Vec2 (random(-maxSpeed, maxSpeed), random(-maxSpeed, maxSpeed));
         newCrate.applyImpulse(dir, newCrate.getWorldCenter());
+        newCrate.applyTorque(random(-maxSpeed, maxSpeed));
         wait = beatTimeout;
       }
     } else {
@@ -227,7 +228,7 @@ void myCustomRenderer(World world) {
   
     Vec2 wormholeCentre = new Vec2(mouseX, mouseY);
     Vec2 droidToWorm = wormholeCentre.sub(screenDroidPos);
-    if (droidToWorm.lengthSquared() < 1000) {
+    if (droidToWorm.lengthSquared() < 2500) {
       gameOver = true;
     } else {
       droidToWorm.normalize();
@@ -240,10 +241,9 @@ void myCustomRenderer(World world) {
       Vec2 worldCenter = crates[i].getWorldCenter();
       Vec2 cratePos = physics.worldToScreen(worldCenter);
       Vec2 directionToWormhole = wormholeCentre.sub(cratePos);
-      if (directionToWormhole.lengthSquared() < 1000) {
+      if (directionToWormhole.lengthSquared() < 2500) {
         remove = i;
       } else if (crateTimers[i] > 0) {
-        float scale = 100 / directionToWormhole.lengthSquared();
         float crateAngle = physics.getAngle(crates[i]);
         pushMatrix();
         translate(cratePos.x, cratePos.y);
@@ -253,6 +253,7 @@ void myCustomRenderer(World world) {
         rect(0, 0, crateSize, crateSize);
         popMatrix();
     
+        float scale = 100 / directionToWormhole.lengthSquared();
         crates[i].applyImpulse(directionToWormhole.mul(scale), worldCenter);
       } else {
         image(boom, cratePos.x, cratePos.y);
